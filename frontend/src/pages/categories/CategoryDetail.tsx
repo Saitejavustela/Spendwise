@@ -1,3 +1,5 @@
+import React from "react"
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getCategoryDetailAPI } from "../../api/categories";
@@ -24,7 +26,7 @@ import {
 
 type DateFilter = "week" | "month" | "year" | "all";
 
-const COLORS = ["#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899", "#f43f5e"];
+const COLORS = ["#10b981", "#14b8a6", "#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1"];
 
 const paymentModeIcons: Record<string, React.ReactNode> = {
   CARD: <CreditCard className="w-4 h-4" />,
@@ -44,13 +46,11 @@ const CategoryDetail = () => {
     queryFn: () => getCategoryDetailAPI(id!),
   });
 
-  // Filter expenses by date
   const filteredExpenses = useMemo(() => {
     if (!data?.expenses) return [];
 
     let result = [...data.expenses];
 
-    // Date filter
     const now = new Date();
     if (dateFilter === "week") {
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -63,7 +63,6 @@ const CategoryDetail = () => {
       result = result.filter((exp: any) => new Date(exp.date) >= yearAgo);
     }
 
-    // Subcategory filter
     if (subCategoryFilter !== "all") {
       result = result.filter(
         (exp: any) => exp.subCategory?.name === subCategoryFilter
@@ -73,7 +72,6 @@ const CategoryDetail = () => {
     return result;
   }, [data, dateFilter, subCategoryFilter]);
 
-  // Calculate filtered totals
   const filteredTotal = useMemo(() => {
     return filteredExpenses.reduce(
       (sum: number, exp: any) => sum + Number(exp.amount),
@@ -81,7 +79,6 @@ const CategoryDetail = () => {
     );
   }, [filteredExpenses]);
 
-  // Get unique subcategories
   const subCategories = useMemo(() => {
     if (!data?.expenses) return [];
     const subs = new Set(
@@ -90,7 +87,6 @@ const CategoryDetail = () => {
     return Array.from(subs);
   }, [data]);
 
-  // Chart data for subcategory breakdown
   const chartData = useMemo(() => {
     if (!data?.breakdown) return [];
     return data.breakdown.map((item: any) => ({
@@ -122,15 +118,15 @@ const CategoryDetail = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/categories")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/20 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <ArrowLeft className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {data?.category?.name || "Category"}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
               {filteredExpenses.length} expenses
             </p>
           </div>
@@ -144,7 +140,7 @@ const CategoryDetail = () => {
               onClick={() => setDateFilter(p)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 dateFilter === p
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
+                  ? "bg-white dark:bg-gray-700 text-emerald-600 dark:text-emerald-400 shadow-sm"
                   : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
@@ -158,7 +154,7 @@ const CategoryDetail = () => {
       </div>
 
       {/* Summary Card */}
-      <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+      <div className="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white">
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-white/20 rounded-xl">
             <TrendingUp className="w-5 h-5" />
@@ -172,7 +168,7 @@ const CategoryDetail = () => {
 
       {/* Subcategory Chart */}
       {chartData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-gray-700">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             Subcategory Breakdown
           </h2>
@@ -210,7 +206,7 @@ const CategoryDetail = () => {
             onClick={() => setSubCategoryFilter("all")}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
               subCategoryFilter === "all"
-                ? "bg-indigo-600 text-white"
+                ? "bg-emerald-600 text-white"
                 : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
             }`}
           >
@@ -222,7 +218,7 @@ const CategoryDetail = () => {
               onClick={() => setSubCategoryFilter(sub as string)}
               className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 subCategoryFilter === sub
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-emerald-600 text-white"
                   : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
             >
@@ -239,14 +235,14 @@ const CategoryDetail = () => {
         </h2>
 
         {filteredExpenses.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center text-gray-500 dark:text-gray-400">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
             No expenses found
           </div>
         ) : (
           filteredExpenses.map((exp: any) => (
             <div
               key={exp.id}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -263,7 +259,7 @@ const CategoryDetail = () => {
                       })}
                     </span>
                     {exp.subCategory?.name && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                         {exp.subCategory.name}
                       </span>
                     )}

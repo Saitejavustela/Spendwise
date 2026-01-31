@@ -1,3 +1,5 @@
+import React from "react"
+
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -57,11 +59,11 @@ const categoryIcons: Record<string, React.ReactNode> = {
 };
 
 const categoryColors: Record<string, string> = {
-  Travel: "from-blue-500 to-cyan-500",
+  Travel: "from-emerald-500 to-teal-500",
   Food: "from-orange-500 to-amber-500",
-  Stay: "from-purple-500 to-pink-500",
-  Shopping: "from-emerald-500 to-teal-500",
-  Transport: "from-indigo-500 to-violet-500",
+  Stay: "from-cyan-500 to-blue-500",
+  Shopping: "from-purple-500 to-pink-500",
+  Transport: "from-teal-500 to-green-600",
 };
 
 const paymentIcons: Record<string, React.ReactNode> = {
@@ -90,17 +92,14 @@ const TripDetail = () => {
   const [budgetCategory, setBudgetCategory] = useState("");
   const [allocatedBudget, setAllocatedBudget] = useState("");
 
-  // Expandable category state
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expensePage, setExpensePage] = useState(1);
 
-  // Expand budget modal state
   const [isExpandBudgetOpen, setIsExpandBudgetOpen] = useState(false);
   const [expandBudgetId, setExpandBudgetId] = useState("");
   const [expandBudgetCategory, setExpandBudgetCategory] = useState("");
   const [expandAmount, setExpandAmount] = useState("");
 
-  // Add expense modal state
   const [isExpenseOpen, setIsExpenseOpen] = useState(false);
   const [expenseCategory, setExpenseCategory] = useState("");
   const [expenseDesc, setExpenseDesc] = useState("");
@@ -113,7 +112,6 @@ const TripDetail = () => {
     queryFn: () => getTripSummaryAPI(id!),
   });
 
-  // Fetch expenses for expanded category
   const { data: expensesData, isLoading: expensesLoading } = useQuery({
     queryKey: ["tripCategoryExpenses", id, expandedCategory, expensePage],
     queryFn: () => getCategoryExpensesAPI(id!, expandedCategory!, expensePage, EXPENSES_PAGE_SIZE),
@@ -158,7 +156,6 @@ const TripDetail = () => {
     setExpenseDesc("");
     setExpenseAmount("");
     setExpenseDate(new Date().toISOString().split("T")[0]);
-    // Keep the payment mode - don't reset it so user's preference is preserved
   };
 
   const handleAddBudget = () => {
@@ -210,7 +207,6 @@ const TripDetail = () => {
     }
   };
 
-  // Calculate totals
   const totals = useMemo(() => {
     if (!data?.summary) return { allocated: 0, spent: 0, remaining: 0 };
     return data.summary.reduce(
@@ -236,20 +232,20 @@ const TripDetail = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate("/trips")}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/20 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <ArrowLeft className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               {data?.trip?.name || "Trip"}
             </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
               Budget overview and tracking
             </p>
           </div>
         </div>
-        <Button onClick={() => setIsBudgetOpen(true)} className="gap-2">
+        <Button onClick={() => setIsBudgetOpen(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
           <Plus className="w-4 h-4" />
           Add Budget
         </Button>
@@ -267,7 +263,7 @@ const TripDetail = () => {
           </p>
         </div>
 
-        <div className="bg-gradient-to-br from-violet-500 to-purple-600 rounded-2xl p-5 text-white">
+        <div className="bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl p-5 text-white">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 opacity-80" />
             <p className="text-white/80 text-sm font-medium">Total Spent</p>
@@ -299,7 +295,7 @@ const TripDetail = () => {
       </div>
 
       {/* Overall Progress */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-100 dark:border-gray-700">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between mb-3">
           <p className="font-medium text-gray-900 dark:text-white">
             Overall Progress
@@ -331,8 +327,8 @@ const TripDetail = () => {
         </h2>
 
         {(!data?.summary || data.summary.length === 0) ? (
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center border border-gray-100 dark:border-gray-700">
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-8 text-center border border-gray-200 dark:border-gray-700">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               No budget categories yet. Add one to start tracking!
             </p>
             <Button onClick={() => setIsBudgetOpen(true)} variant="outline" className="gap-2">
@@ -351,14 +347,14 @@ const TripDetail = () => {
               return (
                 <div
                   key={idx}
-                  className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 overflow-hidden ${
+                  className={`bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden ${
                     isExpanded ? "sm:col-span-2" : ""
                   }`}
                 >
-                  {/* Category Header - Clickable */}
+                  {/* Category Header */}
                   <div
                     onClick={() => toggleCategory(b.category)}
-                    className="p-5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                    className="p-5 cursor-pointer hover:bg-emerald-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2.5 rounded-xl bg-gradient-to-br ${gradientClass} text-white`}>
@@ -368,7 +364,7 @@ const TripDetail = () => {
                         <h3 className="font-semibold text-gray-900 dark:text-white">
                           {b.category}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           ₹{Number(b.spent).toLocaleString("en-IN")} of ₹{totalBudget.toLocaleString("en-IN")}
                         </p>
                       </div>
@@ -401,24 +397,19 @@ const TripDetail = () => {
 
                   {/* Expanded Content */}
                   {isExpanded && (
-                    <div className="border-t border-gray-100 dark:border-gray-700">
+                    <div className="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
                       {/* Budget Breakdown */}
-                      <div className="p-5 bg-gray-50 dark:bg-gray-700/30">
+                      <div className="p-5 space-y-4">
                         <div className="grid grid-cols-3 gap-4 mb-4">
                           <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-xl">
                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Budget</p>
                             <p className="font-bold text-emerald-600 dark:text-emerald-400">
                               ₹{totalBudget.toLocaleString("en-IN")}
                             </p>
-                            {Number(b.additional) > 0 && (
-                              <p className="text-xs text-amber-600 mt-0.5">
-                                +₹{Number(b.additional).toLocaleString("en-IN")}
-                              </p>
-                            )}
                           </div>
                           <div className="text-center p-3 bg-white dark:bg-gray-800 rounded-xl">
                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Spent</p>
-                            <p className="font-bold text-violet-600 dark:text-violet-400">
+                            <p className="font-bold text-cyan-600 dark:text-cyan-400">
                               ₹{Number(b.spent).toLocaleString("en-IN")}
                             </p>
                           </div>
@@ -435,22 +426,16 @@ const TripDetail = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1 gap-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openExpandBudgetModal(b.budgetId, b.category);
-                            }}
+                            className="flex-1 gap-2 bg-transparent"
+                            onClick={() => openExpandBudgetModal(b.budgetId, b.category)}
                           >
                             <Coins className="w-4 h-4" />
                             Expand Budget
                           </Button>
                           <Button
                             size="sm"
-                            className="flex-1 gap-2"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openAddExpenseModal(b.category);
-                            }}
+                            className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
+                            onClick={() => openAddExpenseModal(b.category)}
                           >
                             <PlusCircle className="w-4 h-4" />
                             Add Expense
@@ -459,7 +444,7 @@ const TripDetail = () => {
                       </div>
 
                       {/* Expenses List */}
-                      <div className="p-5">
+                      <div className="p-5 border-t border-gray-200 dark:border-gray-700">
                         <h4 className="font-medium text-gray-900 dark:text-white mb-3">
                           Expenses
                           {expensesData?.total > 0 && (
@@ -482,7 +467,7 @@ const TripDetail = () => {
                             {expensesData?.expenses?.map((exp: any) => (
                               <div
                                 key={exp.id}
-                                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
+                                className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-xl"
                               >
                                 <div className="flex items-center gap-3">
                                   <div className="p-2 bg-gray-200 dark:bg-gray-600 rounded-lg">
@@ -507,39 +492,6 @@ const TripDetail = () => {
                                 </span>
                               </div>
                             ))}
-
-                            {/* Pagination */}
-                            {expensesData?.totalPages > 1 && (
-                              <div className="flex items-center justify-center gap-2 pt-3">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpensePage((p) => Math.max(1, p - 1));
-                                  }}
-                                  disabled={expensePage === 1}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <ChevronLeft className="w-4 h-4" />
-                                </Button>
-                                <span className="text-sm text-gray-600 dark:text-gray-400">
-                                  {expensePage} / {expensesData.totalPages}
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpensePage((p) => Math.min(expensesData.totalPages, p + 1));
-                                  }}
-                                  disabled={expensePage === expensesData.totalPages}
-                                  className="h-8 w-8 p-0"
-                                >
-                                  <ChevronRight className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            )}
                           </div>
                         )}
                       </div>
@@ -552,11 +504,11 @@ const TripDetail = () => {
         )}
       </div>
 
-      {/* Add Budget Modal */}
+      {/* Modals */}
       <Dialog open={isBudgetOpen} onOpenChange={setIsBudgetOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add Budget Category</DialogTitle>
+            <DialogTitle>Add Budget</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -566,40 +518,31 @@ const TripDetail = () => {
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Travel">✈️ Travel</SelectItem>
-                  <SelectItem value="Food">🍽️ Food</SelectItem>
-                  <SelectItem value="Stay">🏨 Stay</SelectItem>
-                  <SelectItem value="Shopping">🛍️ Shopping</SelectItem>
-                  <SelectItem value="Transport">🚗 Transport</SelectItem>
-                  <SelectItem value="Activities">🎯 Activities</SelectItem>
-                  <SelectItem value="Other">📦 Other</SelectItem>
+                  <SelectItem value="Travel">Travel</SelectItem>
+                  <SelectItem value="Food">Food</SelectItem>
+                  <SelectItem value="Stay">Stay</SelectItem>
+                  <SelectItem value="Shopping">Shopping</SelectItem>
+                  <SelectItem value="Transport">Transport</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label>Budget Amount</Label>
               <Input
                 type="number"
-                min="0.01"
-                step="0.01"
                 placeholder="0.00"
                 value={allocatedBudget}
                 onChange={(e) => setAllocatedBudget(e.target.value)}
-                className={allocatedBudget && Number(allocatedBudget) <= 0 ? 'border-red-500' : ''}
               />
-              {allocatedBudget && Number(allocatedBudget) <= 0 && (
-                <p className="text-xs text-red-500">Amount must be greater than 0</p>
-              )}
             </div>
-
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={resetBudgetForm}>
                 Cancel
               </Button>
               <Button
                 onClick={handleAddBudget}
-                disabled={!budgetCategory || !allocatedBudget || Number(allocatedBudget) <= 0 || budgetMutation.isPending}
+                disabled={!budgetCategory || !allocatedBudget || budgetMutation.isPending}
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
                 {budgetMutation.isPending ? "Adding..." : "Add Budget"}
               </Button>
@@ -608,86 +551,29 @@ const TripDetail = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Expand Budget Modal */}
-      <Dialog open={isExpandBudgetOpen} onOpenChange={setIsExpandBudgetOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Coins className="w-5 h-5" />
-              Expand Budget - {expandBudgetCategory}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Additional Amount</Label>
-              <Input
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="Enter amount to add..."
-                value={expandAmount}
-                onChange={(e) => setExpandAmount(e.target.value)}
-                className={expandAmount && Number(expandAmount) <= 0 ? 'border-red-500' : ''}
-              />
-              {expandAmount && Number(expandAmount) <= 0 ? (
-                <p className="text-xs text-red-500">Amount must be greater than 0</p>
-              ) : (
-                <p className="text-xs text-gray-500">
-                  This will be added to the existing budget for {expandBudgetCategory}
-                </p>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setIsExpandBudgetOpen(false)}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleExpandBudget}
-                disabled={!expandAmount || expandBudgetMutation.isPending}
-              >
-                {expandBudgetMutation.isPending ? "Adding..." : "Add to Budget"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Expense Modal */}
       <Dialog open={isExpenseOpen} onOpenChange={setIsExpenseOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <PlusCircle className="w-5 h-5" />
-              Add Expense - {expenseCategory}
-            </DialogTitle>
+            <DialogTitle>Add Expense</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Description</Label>
               <Input
-                placeholder="e.g., Taxi to airport"
+                placeholder="What was the expense?"
                 value={expenseDesc}
                 onChange={(e) => setExpenseDesc(e.target.value)}
               />
             </div>
-
             <div className="space-y-2">
               <Label>Amount</Label>
               <Input
                 type="number"
-                min="0.01"
-                step="0.01"
                 placeholder="0.00"
                 value={expenseAmount}
                 onChange={(e) => setExpenseAmount(e.target.value)}
-                className={expenseAmount && Number(expenseAmount) <= 0 ? 'border-red-500' : ''}
               />
-              {expenseAmount && Number(expenseAmount) <= 0 && (
-                <p className="text-xs text-red-500">Amount must be greater than 0</p>
-              )}
             </div>
-
             <div className="space-y-2">
               <Label>Date</Label>
               <Input
@@ -696,34 +582,27 @@ const TripDetail = () => {
                 onChange={(e) => setExpenseDate(e.target.value)}
               />
             </div>
-
             <div className="space-y-2">
               <Label>Payment Mode</Label>
-              <Select 
-                value={expensePaymentMode} 
-                onValueChange={(v) => {
-                  setExpensePaymentMode(v);
-                  try { localStorage.setItem(STORAGE_KEY, v); } catch {}
-                }}
-              >
+              <Select value={expensePaymentMode} onValueChange={setExpensePaymentMode}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select payment mode" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="CASH">💵 Cash</SelectItem>
-                  <SelectItem value="CARD">💳 Card</SelectItem>
-                  <SelectItem value="UPI">📱 UPI</SelectItem>
+                  <SelectItem value="CASH">Cash</SelectItem>
+                  <SelectItem value="CARD">Card</SelectItem>
+                  <SelectItem value="UPI">UPI</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={resetExpenseForm}>
                 Cancel
               </Button>
               <Button
                 onClick={handleAddExpense}
-                disabled={!expenseDesc.trim() || !expenseAmount || Number(expenseAmount) <= 0 || !expensePaymentMode || expenseMutation.isPending}
+                disabled={!expenseDesc || !expenseAmount || expenseMutation.isPending}
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
                 {expenseMutation.isPending ? "Adding..." : "Add Expense"}
               </Button>

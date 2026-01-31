@@ -68,14 +68,14 @@ const Trips = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Trips
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
+          <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">
             Plan and track your travel budgets
           </p>
         </div>
-        <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
+        <Button onClick={() => setIsCreateOpen(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
           <Plus className="w-4 h-4" />
           Create Trip
         </Button>
@@ -84,14 +84,14 @@ const Trips = () => {
       {/* Trips List */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(!data || data.length === 0) ? (
-          <div className="col-span-full bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-100 dark:border-gray-700">
-            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-              <MapPin className="w-8 h-8 text-gray-400" />
+          <div className="col-span-full bg-white dark:bg-gray-800 rounded-2xl p-12 text-center border border-gray-200 dark:border-gray-700">
+            <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <MapPin className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <p className="text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
               No trips planned yet. Create one to start budgeting!
             </p>
-            <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
+            <Button onClick={() => setIsCreateOpen(true)} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
               <Plus className="w-4 h-4" />
               Create Trip
             </Button>
@@ -103,10 +103,10 @@ const Trips = () => {
               <Link
                 key={trip.id}
                 to={`/trips/${trip.id}`}
-                className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-lg hover:border-indigo-200 dark:hover:border-indigo-800 transition-all duration-200"
+                className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-lg hover:border-emerald-200 dark:hover:border-emerald-800 transition-all duration-200"
               >
                 {/* Decorative header */}
-                <div className="h-20 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 relative">
+                <div className="h-20 bg-gradient-to-br from-teal-400 via-emerald-500 to-green-600 relative">
                   <div className="absolute inset-0 bg-black/10" />
                   <MapPin className="absolute bottom-3 right-3 w-6 h-6 text-white/50" />
                 </div>
@@ -119,10 +119,10 @@ const Trips = () => {
                       >
                         {status.label}
                       </span>
-                      <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                         {trip.name}
                       </h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1 mt-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(trip.startDate).toLocaleDateString("en-IN", {
                           day: "numeric",
@@ -136,7 +136,7 @@ const Trips = () => {
                         })}
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
                   </div>
                 </div>
               </Link>
@@ -190,6 +190,7 @@ const Trips = () => {
               <Button
                 onClick={handleCreateTrip}
                 disabled={!tripName || !startDate || !endDate || createMutation.isPending}
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
                 {createMutation.isPending ? "Creating..." : "Create Trip"}
               </Button>

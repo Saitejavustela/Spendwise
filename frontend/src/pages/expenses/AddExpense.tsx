@@ -11,17 +11,17 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-} from "@/components/ui/card";
+} from "../../components/ui/card";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 import {
   Select,
   SelectTrigger,
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select";
+} from "../../components/ui/select";
 
 const STORAGE_KEY = "spendwise_last_payment_mode";
 
@@ -29,7 +29,6 @@ const AddExpense = () => {
   const { open: openCalculator } = useCalculatorStore();
   const navigate = useNavigate();
 
-  // Get last used payment mode from localStorage
   const getLastPaymentMode = () => {
     try {
       return localStorage.getItem(STORAGE_KEY) || "CASH";
@@ -54,15 +53,13 @@ const AddExpense = () => {
   const registerAmount = useAddExpenseAmount((s) => s.registerAmountSetter);
   
   useEffect(() => {
-    // Register function so calculator can update amount
     registerAmount((value: number) => update("amount", String(value)));
   }, []);
 
   const update = (k: string, v: any) => {
     setForm({ ...form, [k]: v });
-    setError(null); // Clear error when user makes changes
+    setError(null);
 
-    // Save payment mode to localStorage when changed
     if (k === "paymentMode") {
       try {
         localStorage.setItem(STORAGE_KEY, v);
@@ -70,7 +67,6 @@ const AddExpense = () => {
     }
   };
 
-  // Fetch categories & subcategories
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategoriesAPI,
@@ -80,7 +76,6 @@ const AddExpense = () => {
     (c: any) => c.id === form.categoryId
   );
 
-  // Validation
   const amountNum = Number(form.amount);
   const isAmountValid = form.amount !== "" && amountNum > 0;
   const isFormValid = form.categoryId && form.description.trim() && isAmountValid;
@@ -108,7 +103,6 @@ const AddExpense = () => {
         amount: amountNum,
       });
 
-      // Redirect to expenses list after successful creation
       navigate("/expenses");
     } catch (err: any) {
       setError(err?.response?.data?.message || "Failed to add expense. Please try again.");
@@ -118,9 +112,9 @@ const AddExpense = () => {
   };
 
   return (
-    <Card className="max-w-xl mx-auto p-4">
+    <Card className="max-w-xl mx-auto p-4 border-emerald-200 dark:border-emerald-900/30">
       <CardHeader>
-        <CardTitle>Add Expense</CardTitle>
+        <CardTitle className="text-emerald-600 dark:text-emerald-400">Add Expense</CardTitle>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -133,7 +127,7 @@ const AddExpense = () => {
 
         {/* CATEGORY */}
         <div className="space-y-1">
-          <label className="font-medium">Category *</label>
+          <label className="font-medium text-gray-700 dark:text-gray-300">Category *</label>
           <Select value={form.categoryId} onValueChange={(v) => update("categoryId", v)}>
             <SelectTrigger className={!form.categoryId && error?.includes("category") ? "border-red-500" : ""}>
               <SelectValue placeholder="Select Category" />
@@ -151,7 +145,7 @@ const AddExpense = () => {
         {/* SUBCATEGORY */}
         {selectedCategory && (
           <div className="space-y-1">
-            <label className="font-medium">Subcategory</label>
+            <label className="font-medium text-gray-700 dark:text-gray-300">Subcategory</label>
             <Select onValueChange={(v) => update("subCategoryId", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Subcategory" />
@@ -169,7 +163,7 @@ const AddExpense = () => {
 
         {/* DESCRIPTION */}
         <div className="space-y-1">
-          <label className="font-medium">Description *</label>
+          <label className="font-medium text-gray-700 dark:text-gray-300">Description *</label>
           <Input
             placeholder="Eg: Chicken Biryani + Coke"
             value={form.description}
@@ -180,7 +174,7 @@ const AddExpense = () => {
 
         {/* DATE */}
         <div className="space-y-1">
-          <label className="font-medium">Date</label>
+          <label className="font-medium text-gray-700 dark:text-gray-300">Date</label>
           <Input
             type="date"
             value={form.date}
@@ -190,7 +184,7 @@ const AddExpense = () => {
 
         {/* PAYMENT MODE */}
         <div className="space-y-1">
-          <label className="font-medium">Payment Mode</label>
+          <label className="font-medium text-gray-700 dark:text-gray-300">Payment Mode</label>
           <Select
             value={form.paymentMode}
             onValueChange={(v) => update("paymentMode", v)}
@@ -209,7 +203,7 @@ const AddExpense = () => {
         {/* UPI PROVIDERS */}
         {form.paymentMode === "UPI" && (
           <div className="space-y-1">
-            <label className="font-medium">UPI Provider</label>
+            <label className="font-medium text-gray-700 dark:text-gray-300">UPI Provider</label>
             <Select onValueChange={(v) => update("upiProvider", v)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Provider" />
@@ -226,7 +220,7 @@ const AddExpense = () => {
 
         {/* AMOUNT */}
         <div className="space-y-1">
-          <label className="font-medium">Amount *</label>
+          <label className="font-medium text-gray-700 dark:text-gray-300">Amount *</label>
           <div className="flex gap-3">
             <Input
               type="number"
@@ -248,7 +242,7 @@ const AddExpense = () => {
 
         {/* SUBMIT */}
         <Button 
-          className="w-full" 
+          className="w-full bg-emerald-600 hover:bg-emerald-700"
           onClick={submit}
           disabled={!isFormValid || isSubmitting}
         >
