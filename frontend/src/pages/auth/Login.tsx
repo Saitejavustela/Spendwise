@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const BACKEND_URL = import.meta.env.VITE_API_URL?.replace('/api', '') || "https://spenwise-backend.onrender.com";
+const BACKEND_URL = "https://spenwise-backend.onrender.com";
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
