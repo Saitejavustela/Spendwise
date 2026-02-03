@@ -47,3 +47,9 @@ export const getGroupCategorySummaryAPI = async (groupId: string, category: stri
   const { data } = await api.get(`/groups/${groupId}/category/${encodeURIComponent(category)}`);
   return data;
 };
+
+// Delete a group
+export const deleteGroupAPI = async (groupId: string) => {
+  const { data } = await api.delete(`/groups/${groupId}`);
+  return data;
+};

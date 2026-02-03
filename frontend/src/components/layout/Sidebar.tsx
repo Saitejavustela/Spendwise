@@ -5,8 +5,10 @@ import {
   FolderOpen, 
   Users, 
   Plane,
-  X 
+  X,
+  User
 } from "lucide-react";
+import { useAuthStore } from "../../store/authStore";
 
 const menu = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
@@ -23,6 +25,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen = true, onClose }: SidebarProps) => {
   const location = useLocation();
+  const user = useAuthStore((s) => s.user);
 
   return (
     <>
@@ -82,8 +85,34 @@ const Sidebar = ({ isOpen = true, onClose }: SidebarProps) => {
           })}
         </nav>
 
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-800">
+        {/* Footer with User Info */}
+        <div className="p-4 border-t border-gray-800 space-y-3">
+          {/* User Info */}
+          {user && (
+            <div className="flex items-center gap-3 px-2 py-2">
+              <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center">
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name} 
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <User className="w-4 h-4 text-white" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user.name || user.email?.split('@')[0]}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {user.email}
+                </p>
+              </div>
+            </div>
+          )}
+          
+          {/* Copyright */}
           <p className="text-xs text-gray-500 text-center">© 2024 SpendWise</p>
         </div>
       </aside>

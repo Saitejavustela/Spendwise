@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getGroupsAPI, createGroupAPI } from "../../api/groups";
+import { getGroupsAPI, createGroupAPI, deleteGroupAPI } from "../../api/groups";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import { Plus, Users, ChevronRight, X } from "lucide-react";
+import { Plus, Users, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -13,10 +13,16 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 const Groups = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string; name: string }>({
+    open: false,
+    id: "",
+    name: "",
+  });
 
   const queryClient = useQueryClient();
 
@@ -34,9 +40,26 @@ const Groups = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteGroupAPI,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["groups"] });
+    },
+  });
+
   const handleCreateGroup = () => {
     if (!newGroupName.trim()) return;
     createMutation.mutate({ name: newGroupName });
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, group: any) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDeleteConfirm({ open: true, id: group.id, name: group.name });
+  };
+
+  const handleConfirmDelete = () => {
+    deleteMutation.mutate(deleteConfirm.id);
   };
 
   if (isLoading) return <LoadingSpinner />;
@@ -96,7 +119,17 @@ const Groups = () => {
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={(e) => handleDeleteClick(e, group)}
+                    disabled={deleteMutation.isPending}
+                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                    title="Delete group"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                </div>
               </div>
             </Link>
           ))
@@ -135,6 +168,18 @@ const Groups = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Delete Dialog */}
+      <ConfirmDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) => setDeleteConfirm({ ...deleteConfirm, open })}
+        title="Delete Group"
+        description={`This will permanently delete "${deleteConfirm.name}" including all members, expenses, and settlements. This action cannot be undone.`}
+        confirmText="Delete"
+        variant="danger"
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 };
