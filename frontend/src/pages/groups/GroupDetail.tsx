@@ -18,8 +18,6 @@ import {
   UserPlus,
   Receipt,
   Check,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Trash2,
   Utensils,
@@ -28,6 +26,8 @@ import {
   Music,
   ShoppingBag,
   MoreHorizontal,
+  History,
+  CreditCard,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -67,6 +67,7 @@ const GroupDetail = () => {
   const [isSettlementOpen, setIsSettlementOpen] = useState(false);
   const [isMemberOpen, setIsMemberOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [settlementCategory, setSettlementCategory] = useState<string | null>(null);
 
   const [expenseDesc, setExpenseDesc] = useState("");
   const [expenseAmount, setExpenseAmount] = useState("");
@@ -79,11 +80,9 @@ const GroupDetail = () => {
   const [fromMember, setFromMember] = useState("");
   const [toMember, setToMember] = useState("");
   const [settlementAmount, setSettlementAmount] = useState("");
+  const [settlementNote, setSettlementNote] = useState("");
 
   const [memberName, setMemberName] = useState("");
-
-  const [historyPage, setHistoryPage] = useState(1);
-  const HISTORY_PAGE_SIZE = 15;
 
   const { data, isLoading } = useQuery({
     queryKey: ["group", id],
@@ -100,6 +99,7 @@ const GroupDetail = () => {
     mutationFn: addGroupExpenseAPI,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group", id] });
+      queryClient.invalidateQueries({ queryKey: ["groupCategory", id] });
       resetExpenseForm();
     },
   });
@@ -108,10 +108,13 @@ const GroupDetail = () => {
     mutationFn: addSettlementAPI,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["group", id] });
+      queryClient.invalidateQueries({ queryKey: ["groupCategory", id] });
       setIsSettlementOpen(false);
       setFromMember("");
       setToMember("");
       setSettlementAmount("");
+      setSettlementNote("");
+      setSettlementCategory(null);
     },
   });
 
@@ -187,6 +190,7 @@ const GroupDetail = () => {
       fromMemberId: fromMember,
       toMemberId: toMember,
       amount: amountNum,
+      note: settlementNote || (settlementCategory ? `Settlement for ${settlementCategory}` : undefined),
     });
   };
 
@@ -216,11 +220,22 @@ const GroupDetail = () => {
     );
   };
 
+  const openCategorySettlement = (category: string, fromId?: string) => {
+    setSettlementCategory(category);
+    if (fromId) setFromMember(fromId);
+    setIsSettlementOpen(true);
+  };
+
+  const unequalTotal = Object.values(unequalShares).reduce((sum, val) => sum + (Number(val) || 0), 0);
+  const expenseAmountNum = Number(expenseAmount) || 0;
+
   if (isLoading) return <LoadingSpinner />;
 
   const members = data?.members || [];
   const balances = data?.balances || [];
   const categoryBreakdown = data?.categoryBreakdown || [];
+  const expenses = data?.expenses || [];
+  const settlementsHistory = data?.settlementsHistory || [];
 
   return (
     <div className="space-y-6">
@@ -292,18 +307,6 @@ const GroupDetail = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {m.balance < 0 && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setFromMember(m.memberId);
-                        setIsSettlementOpen(true);
-                      }}
-                    >
-                      Settle
-                    </Button>
-                  )}
                   <button
                     onClick={() => handleDeleteMemberClick(m.memberId)}
                     disabled={deleteMemberMutation.isPending}
@@ -362,16 +365,19 @@ const GroupDetail = () => {
                       <div className="text-center py-4 text-gray-500">Loading...</div>
                     ) : (
                       <>
+                        {/* Category Balances */}
                         {categoryData?.balances?.length > 0 && (
                           <div>
-                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              Balances in {cat.name}
-                            </h3>
+                            <div className="flex items-center justify-between mb-2">
+                              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Balances in {cat.name}
+                              </h3>
+                            </div>
                             <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                               {categoryData.balances.map((b: any) => (
                                 <div
                                   key={b.memberId}
-                                  className={`p-3 rounded-lg ${
+                                  className={`p-3 rounded-lg flex items-center justify-between ${
                                     b.balance > 0
                                       ? "bg-emerald-50 dark:bg-emerald-900/20"
                                       : b.balance < 0
@@ -379,22 +385,84 @@ const GroupDetail = () => {
                                       : "bg-white dark:bg-gray-800"
                                   }`}
                                 >
-                                  <p className="font-medium text-gray-900 dark:text-white text-sm">
-                                    {b.name}
-                                  </p>
-                                  <p className={`text-sm ${
-                                    b.balance > 0
-                                      ? "text-emerald-600 dark:text-emerald-400"
-                                      : b.balance < 0
-                                      ? "text-red-600 dark:text-red-400"
-                                      : "text-gray-500"
-                                  }`}>
-                                    {b.balance > 0
-                                      ? `Gets ₹${b.balance.toLocaleString("en-IN")}`
-                                      : b.balance < 0
-                                      ? `Owes ₹${Math.abs(b.balance).toLocaleString("en-IN")}`
-                                      : "Settled"}
-                                  </p>
+                                  <div>
+                                    <p className="font-medium text-gray-900 dark:text-white text-sm">
+                                      {b.name}
+                                    </p>
+                                    <p className={`text-sm ${
+                                      b.balance > 0
+                                        ? "text-emerald-600 dark:text-emerald-400"
+                                        : b.balance < 0
+                                        ? "text-red-600 dark:text-red-400"
+                                        : "text-gray-500"
+                                    }`}>
+                                      {b.balance > 0
+                                        ? `Gets ₹${b.balance.toLocaleString("en-IN")}`
+                                        : b.balance < 0
+                                        ? `Owes ₹${Math.abs(b.balance).toLocaleString("en-IN")}`
+                                        : "Settled"}
+                                    </p>
+                                  </div>
+                                  {b.balance < -0.01 && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openCategorySettlement(cat.name, b.memberId);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      Settle
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Suggested Settlements for this Category */}
+                        {categoryData?.suggestedSettlements?.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Suggested Settlements
+                            </h3>
+                            <div className="space-y-2">
+                              {categoryData.suggestedSettlements.map((s: any, idx: number) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-sm"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{s.fromName}</span>
+                                    <ArrowRight className="w-3 h-3 text-gray-400" />
+                                    <span className="font-medium">{s.toName}</span>
+                                  </div>
+                                  <span className="font-bold text-emerald-600">₹{s.amount.toLocaleString("en-IN")}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Category Expenses */}
+                        {categoryData?.expenses?.length > 0 && (
+                          <div>
+                            <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              Expenses
+                            </h3>
+                            <div className="space-y-2 max-h-48 overflow-y-auto">
+                              {categoryData.expenses.map((e: any) => (
+                                <div
+                                  key={e.id}
+                                  className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg text-sm"
+                                >
+                                  <div>
+                                    <p className="font-medium text-gray-900 dark:text-white">{e.description}</p>
+                                    <p className="text-xs text-gray-500">Paid by {e.paidByName}</p>
+                                  </div>
+                                  <span className="font-bold text-gray-900 dark:text-white">₹{e.amount.toLocaleString("en-IN")}</span>
                                 </div>
                               ))}
                             </div>
@@ -410,43 +478,89 @@ const GroupDetail = () => {
         </div>
       </div>
 
-      {/* Suggested Settlements */}
-      {data?.suggestedSettlements && data.suggestedSettlements.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700">
-          <h2 className="font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <ArrowRight className="w-5 h-5 text-emerald-500" />
-            Suggested Settlements (Overall)
-          </h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Optimal way to settle up with minimum transactions
-          </p>
-          <div className="space-y-3">
-            {data.suggestedSettlements.map((s: any, idx: number) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
-              >
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {s.fromName}
-                  </span>
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {s.toName}
-                  </span>
-                </div>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  ₹{s.amount.toLocaleString("en-IN")}
-                </span>
-              </div>
-            ))}
+      {/* Expenses & Settlements History */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl p-5 border border-gray-200 dark:border-gray-700">
+        <Tabs defaultValue="expenses">
+          <div className="flex items-center justify-between mb-4">
+            <TabsList>
+              <TabsTrigger value="expenses" className="gap-2">
+                <Receipt className="w-4 h-4" />
+                Expenses
+              </TabsTrigger>
+              <TabsTrigger value="settlements" className="gap-2">
+                <CreditCard className="w-4 h-4" />
+                Settlements
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </div>
-      )}
+
+          <TabsContent value="expenses">
+            {expenses.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No expenses yet</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {expenses.map((e: any) => {
+                  const catInfo = CATEGORIES.find(c => c.name === e.category);
+                  const CatIcon = catInfo?.icon || MoreHorizontal;
+                  return (
+                    <div
+                      key={e.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${catInfo?.color || "from-gray-500 to-gray-600"} flex items-center justify-center text-white`}>
+                          <CatIcon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">{e.description}</p>
+                          <p className="text-xs text-gray-500">
+                            Paid by {e.paidByName} • {new Date(e.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-gray-900 dark:text-white">₹{e.amount.toLocaleString("en-IN")}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="settlements">
+            {settlementsHistory.length === 0 ? (
+              <p className="text-center text-gray-500 py-8">No settlements yet</p>
+            ) : (
+              <div className="space-y-2 max-h-80 overflow-y-auto">
+                {settlementsHistory.map((s: any) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+                        <Check className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {s.fromName} → {s.toName}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {s.note && `${s.note} • `}{new Date(s.settledAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="font-bold text-emerald-600">₹{s.amount.toLocaleString("en-IN")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Add Expense Modal */}
       <Dialog open={isExpenseOpen} onOpenChange={setIsExpenseOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Group Expense</DialogTitle>
           </DialogHeader>
@@ -492,19 +606,107 @@ const GroupDetail = () => {
                 <SelectContent>
                   {members.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.name}
+                      {m.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Split Type Selection */}
+            <div className="space-y-2">
+              <Label>Split Type</Label>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant={splitType === "equal" ? "default" : "outline"}
+                  onClick={() => setSplitType("equal")}
+                  className={splitType === "equal" ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                >
+                  Equal Split
+                </Button>
+                <Button
+                  type="button"
+                  variant={splitType === "unequal" ? "default" : "outline"}
+                  onClick={() => setSplitType("unequal")}
+                  className={splitType === "unequal" ? "bg-emerald-600 hover:bg-emerald-700" : ""}
+                >
+                  Unequal Split
+                </Button>
+              </div>
+            </div>
+
+            {/* Equal Split - Member Selection */}
+            {splitType === "equal" && (
+              <div className="space-y-2">
+                <Label>Split Among (leave empty for all)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {members.map((m: any) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => toggleMemberSelection(m.id)}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                        selectedMembers.includes(m.id) || selectedMembers.length === 0
+                          ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-2 border-emerald-500"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border-2 border-transparent"
+                      }`}
+                    >
+                      {selectedMembers.includes(m.id) && <Check className="w-3 h-3 inline mr-1" />}
+                      {m.displayName}
+                    </button>
+                  ))}
+                </div>
+                {expenseAmountNum > 0 && (
+                  <p className="text-sm text-gray-500">
+                    Each pays: ₹{(expenseAmountNum / (selectedMembers.length || members.length)).toFixed(2)}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Unequal Split - Custom Amounts */}
+            {splitType === "unequal" && (
+              <div className="space-y-2">
+                <Label>Enter amounts for each member</Label>
+                <div className="space-y-2">
+                  {members.map((m: any) => (
+                    <div key={m.id} className="flex items-center gap-3">
+                      <span className="w-24 text-sm font-medium text-gray-700 dark:text-gray-300 truncate">
+                        {m.displayName}
+                      </span>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        value={unequalShares[m.id] || ""}
+                        onChange={(e) =>
+                          setUnequalShares((prev) => ({ ...prev, [m.id]: e.target.value }))
+                        }
+                        className="flex-1"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className={`text-sm ${Math.abs(unequalTotal - expenseAmountNum) < 0.01 ? "text-emerald-600" : "text-red-600"}`}>
+                  Total: ₹{unequalTotal.toFixed(2)} / ₹{expenseAmountNum.toFixed(2)}
+                  {Math.abs(unequalTotal - expenseAmountNum) >= 0.01 && " (must match)"}
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={resetExpenseForm}>
                 Cancel
               </Button>
               <Button
                 onClick={handleAddExpense}
-                disabled={!expenseDesc || !expenseAmount || !paidBy || expenseMutation.isPending}
+                disabled={
+                  !expenseDesc || 
+                  !expenseAmount || 
+                  !paidBy || 
+                  expenseMutation.isPending ||
+                  (splitType === "unequal" && Math.abs(unequalTotal - expenseAmountNum) >= 0.01)
+                }
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
                 {expenseMutation.isPending ? "Adding..." : "Add Expense"}
@@ -550,11 +752,14 @@ const GroupDetail = () => {
       <Dialog open={isSettlementOpen} onOpenChange={setIsSettlementOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Record Settlement</DialogTitle>
+            <DialogTitle>
+              Record Settlement
+              {settlementCategory && <span className="text-emerald-600"> ({settlementCategory})</span>}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>From</Label>
+              <Label>From (who is paying)</Label>
               <Select value={fromMember} onValueChange={setFromMember}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select member" />
@@ -562,14 +767,14 @@ const GroupDetail = () => {
                 <SelectContent>
                   {members.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.name}
+                      {m.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>To</Label>
+              <Label>To (who is receiving)</Label>
               <Select value={toMember} onValueChange={setToMember}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select member" />
@@ -577,7 +782,7 @@ const GroupDetail = () => {
                 <SelectContent>
                   {members.map((m: any) => (
                     <SelectItem key={m.id} value={m.id}>
-                      {m.name}
+                      {m.displayName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -590,6 +795,14 @@ const GroupDetail = () => {
                 placeholder="0.00"
                 value={settlementAmount}
                 onChange={(e) => setSettlementAmount(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Note (optional)</Label>
+              <Input
+                placeholder="e.g., Cash payment, UPI"
+                value={settlementNote}
+                onChange={(e) => setSettlementNote(e.target.value)}
               />
             </div>
             <div className="flex justify-end gap-3 pt-2">
